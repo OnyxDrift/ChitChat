@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; connect-src *; font-src 'self' https://fonts.gstatic.com; style-src 'self' https://fonts.googleapis.com">
+  <title>ChitChat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Left Slide-out Panel -->
+  <div class="panel-tab">›</div>
+  <div id="leftPanel" class="left-panel">
+    <div class="panel-content">
+      <h3>Chit<br> Chat</h3>
+      <div class="panel-actions">
+        <button id="newChatButton" class="panel-icon-button" title="New Chat">
+          <img src="assets/edit.svg" alt="New Chat">
+        </button>
+        <!-- <button id="folderButton" class="panel-icon-button" title="Folder">
+          <img src="assets/folder-open.svg" alt="Folder">
+        </button> -->
+        <button id="pinButton" class="panel-icon-button" title="Pinned">
+          <img src="assets/thumbtack.svg" alt="Pinned">
+        </button>
+        <button id="historyButton" class="panel-icon-button" title="History">
+          <img src="assets/time-past.svg" alt="History">
+        </button>
+      </div>
+      <div class="panel-settings">
+        <button id="settingsButton" class="settings-button" title="Settings">
+          <img src="assets/settings.svg" alt="Settings">
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <div class="status-bar status-bar-top">
+      <div id="chatTitle" class="chat-title">New Chat</div>
+    </div>
+
+    <div class="chat-container">
+      <div id="emptyState" class="empty-state">
+        <img src="assets/ollama.svg" alt="Ollama" class="empty-state-logo">
+      </div>
+      <div id="messages" class="messages"></div>
+    </div>
+
+    <div class="bottom-section">
+      <div class="input-container">
+        <textarea
+          id="messageInput"
+          placeholder="Ask and you shall receive..."
+          rows="3"
+        ></textarea>
+        <button id="sendButton">Send</button>
+      </div>
+
+      <div class="status-bar">
+        <div class="status-left">
+          <span id="connectionStatusDot" class="status-dot hidden"></span>
+          <span id="backendName"></span>
+          <span id="backendHostContainer" class="hidden">
+            <span class="separator">|</span>
+            <span id="backendHost"></span>
+          </span>
+          <span id="modelSelectorContainer" class="model-selector-container hidden">
+            <span class="separator">|</span>
+            <select id="modelSelect" class="model-select">
+              <option value="">Loading...</option>
+            </select>
+          </span>
+        </div>
+        <div class="status-right">
+          <span id="currentTime">00:00:00</span>
+          <span class="separator">|</span>
+          <div class="chat-info-container">
+            <img src="assets/info.svg" alt="Info" class="chat-info-icon">
+            <div class="chat-info-dropdown hidden">
+              <div class="info-row">
+                <span class="info-label">Prompt Tokens:</span>
+                <span id="infoPromptTokens" class="info-value">0</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Response Tokens:</span>
+                <span id="infoResponseTokens" class="info-value">0</span>
+              </div>
+              <div class="info-row info-row-total">
+                <span class="info-label">Total Tokens:</span>
+                <span id="infoTotalTokens" class="info-value">0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Backend Configuration Modal -->
+  <div id="configModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Server Configuration</h2>
+        <button id="closeModal" class="close-button">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="configSelect">Select Configuration:</label>
+          <select id="configSelect" class="form-control">
+            <option value="">-- No configurations --</option>
+          </select>
+        </div>
+
+        <div class="form-divider"></div>
+
+        <div class="form-group">
+          <label for="configName">Configuration Name:</label>
+          <input type="text" id="configName" class="form-control" placeholder="e.g., Ollama GPUBox">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="configHost">Server/Host:</label>
+            <input type="text" id="configHost" class="form-control" placeholder="e.g., gpubox or 192.168.2.192">
+          </div>
+
+          <div class="form-group">
+            <label for="configPort">Port:</label>
+            <input type="number" id="configPort" class="form-control" placeholder="e.g., 11434" value="11434">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="configTurns">Context Turns:</label>
+          <select id="configTurns" class="form-control">
+            <option value="0">0 turns (no context)</option>
+            <option value="1">1 turn</option>
+            <option value="2">2 turns</option>
+            <option value="3">3 turns</option>
+            <option value="5">5 turns</option>
+            <option value="10" selected>10 turns (default)</option>
+            <option value="15">15 turns</option>
+            <option value="20">20 turns</option>
+            <option value="25">25 turns</option>
+            <option value="30">30 turns</option>
+          </select>
+          <small style="color: #808080; font-size: 11px; margin-top: 4px; display: block;">Number of previous conversation turns to send for context</small>
+        </div>
+
+        <div class="form-group">
+          <label for="configDescription">Description (optional):</label>
+          <textarea id="configDescription" class="form-control" rows="2" placeholder="Optional notes about this configuration"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="deleteConfigButton" class="btn-delete" disabled>Delete</button>
+        <div class="modal-footer-right">
+          <button id="setActiveButton" class="btn-active" disabled>Set Active</button>
+          <button id="saveConfigButton" class="btn-primary">Save</button>
+          <button id="cancelButton" class="btn-cancel">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Menu Modal -->
+  <div id="settingsMenuModal" class="modal hidden">
+    <div class="settings-menu-content">
+      <div class="settings-menu-header">
+        <h2>Settings</h2>
+        <button id="closeSettingsMenu" class="close-button">&times;</button>
+      </div>
+      <div class="settings-menu-body">
+        <div class="menu-option" id="backendConfigOption">
+          <img src="assets/database.svg" alt="" class="menu-option-icon">
+          Server Configuration
+        </div>
+        <div class="menu-option" id="systemPromptOption">
+          <img src="assets/brain-circuit.svg" alt="" class="menu-option-icon">
+          System Prompt Management
+        </div>
+        <div class="menu-option" id="persistenceManagementOption">
+          <img src="assets/chart-set-theory.svg" alt="" class="menu-option-icon">
+          Persistence Management
+        </div>
+        <div class="menu-option" id="aboutOption">
+          <img src="assets/info.svg" alt="" class="menu-option-icon">
+          About
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- System Prompt Management Modal -->
+  <div id="systemPromptModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>System Prompt Management</h2>
+        <button id="closeSystemPromptModal" class="close-button">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="promptConfigSelect">Server Configuration:</label>
+          <select id="promptConfigSelect" class="form-control">
+            <option value="">-- Select Configuration --</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="promptModelSelect">Model:</label>
+          <select id="promptModelSelect" class="form-control">
+            <option value="">-- Select Model --</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="systemPromptText">
+            System Prompt:
+          </label>
+          <textarea id="systemPromptText" class="form-control system-prompt-textarea" rows="10" placeholder="Enter the system prompt for this model..."></textarea>
+          <div id="promptVersionIndicator" class="prompt-version-indicator hidden"></div>
+          <div id="unsavedDraftBadge" class="unsaved-draft-badge hidden">unsaved draft</div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="promptHistoryButton" class="btn-history">History</button>
+        <div class="modal-footer-right">
+          <button id="clearPromptButton" class="btn-clear" disabled>Clear</button>
+          <button id="resetPromptButton" class="btn-reset hidden" disabled>Reset</button>
+          <button id="savePromptButton" class="btn-primary" disabled>Save</button>
+          <button id="cancelPromptButton" class="btn-cancel">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- System Prompt History Modal -->
+  <div id="promptHistoryModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>System Prompt History</h2>
+        <button id="closePromptHistoryModal" class="close-button">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="prompt-history-info">
+          <span id="promptHistoryConfig" class="history-meta"></span>
+          <span id="promptHistoryModel" class="history-meta"></span>
+        </div>
+        <div id="promptHistoryList" class="conversation-list">
+          <!-- Prompt history items will be added here dynamically -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="prompt-history-note">
+          Note: Only the 50 most recent versions are kept. Versions are automatically renumbered as older ones are removed.
+        </div>
+        <div class="modal-footer-right">
+          <button id="closePromptHistoryButton" class="btn-cancel">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pinned Modal -->
+  <div id="pinnedModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Pinned</h2>
+        <button id="closePinnedModal" class="close-button">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="pinnedList" class="conversation-list">
+          <!-- Pinned conversation items will be added here dynamically -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- History Modal -->
+  <div id="historyModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>History</h2>
+        <button id="closeHistoryModal" class="close-button">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="conversationList" class="conversation-list">
+          <!-- Conversation items will be added here dynamically -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rename Modal -->
+  <div id="renameModal" class="modal hidden">
+    <div class="modal-content rename-modal-content">
+      <div class="modal-header">
+        <h2>Rename Conversation</h2>
+        <button id="closeRenameModal" class="close-button">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="conversationTitle">New Title:</label>
+          <input type="text" id="conversationTitle" class="form-control" placeholder="Enter conversation title">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="saveRenameButton" class="btn-primary">Save</button>
+        <button id="cancelRenameButton" class="btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Persistence Management Modal -->
+  <div id="persistenceManagementModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Persistence Management</h2>
+        <button id="closePersistenceManagementModal" class="close-button">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="menu-option danger" id="deleteChatPersistenceOption">
+          <img src="assets/delete-document.svg" alt="" class="menu-option-icon">
+          Delete Chat Persistence
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteConfirmationModal" class="modal hidden">
+    <div class="modal-content rename-modal-content">
+      <div class="modal-header">
+        <h2>Confirm Deletion</h2>
+        <button id="closeDeleteConfirmationModal" class="close-button">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin: 0; padding: 20px 0; text-align: center;">
+          This will permanently delete all chat history and pinned conversations.<br><br>
+          <strong>This action cannot be undone.</strong><br><br>
+          Are you sure you want to continue?
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button id="confirmDeleteButton" class="btn-delete">Delete All</button>
+        <button id="cancelDeleteButton" class="btn-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
